@@ -214,13 +214,7 @@ export async function registerCsvParseWorker() {
     } catch (error) {
       console.error(`[Import ${importId}] Error in CSV parse worker:`, error);
 
-      // Sanitize error message to avoid exposing internal details
-      const safeMessage =
-        error instanceof Error
-          ? error.message.replace(/\/[^\s]+/g, "[path]").substring(0, 500)
-          : "An unexpected error occurred during import processing";
-
-      await updateImportStatus(importId, "failed", safeMessage);
+      await updateImportStatus(importId, "failed", "An unexpected error occurred during import processing");
 
       // Don't re-throw - worker should continue processing other jobs
       console.error(`[Import ${importId}] Import failed, worker continuing`);

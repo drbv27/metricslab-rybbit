@@ -35,7 +35,7 @@ interface ImportManagerProps {
   disabled: boolean;
 }
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILE_SIZE = IS_CLOUD ? 500 * 1024 * 1024 : Infinity; // 500 MB for cloud, infinite for self-hosted
 const ALLOWED_FILE_TYPES = ["text/csv"];
 const ALLOWED_EXTENSIONS = [".csv"];
 const PLATFORMS = [{ value: "umami", label: "Umami" }] as const;
@@ -126,8 +126,7 @@ export function ImportManager({ siteId, disabled }: ImportManagerProps) {
     const file = data.file[0];
     if (!file) return;
 
-    // Show confirmation dialog for large files
-    if (file.size > 50 * 1024 * 1024) {
+    if (file.size > 100 * 1024 * 1024) {
       setShowConfirmDialog(true);
     } else {
       executeImport(data);

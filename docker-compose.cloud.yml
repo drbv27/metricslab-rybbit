@@ -17,8 +17,6 @@ services:
       # Pass domain name for use in Caddyfile
       # Email is configured via Caddyfile global options
       - DOMAIN_NAME=${DOMAIN_NAME}
-      # 500MB limit for import endpoint on cloud
-      - MAX_IMPORT_SIZE=500MB
     depends_on:
       - backend
       - client

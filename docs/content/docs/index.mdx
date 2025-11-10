@@ -34,8 +34,7 @@ import {
 
 **Rybbit** is a powerful open source web and products analytics platform. Check out our [live demo](https://demo.rybbit.com/1) using a real production site that sends over **15,000,000** events a month.
 
-<div className="relative z-10 rounded-lg overflow-hidden border-8 border-neutral-100/5 shadow-2xl shadow-emerald-900/10">
-  {/* Remove mobile message and show iframe on all devices */}
+{/* <div className="relative z-10 rounded-lg overflow-hidden border-8 border-neutral-100/5 shadow-2xl shadow-emerald-900/10">
   <iframe
     src="https://demo.rybbit.com/21"
     width="1300"
@@ -44,55 +43,16 @@ import {
     style={{ border: "none" }}
     title="Rybbit Analytics Demo"
   ></iframe>
-</div>
-
-## Key Features
-
-- Extremely comprehensive prebuilt web analytics dashboards
-- Cookieless and privacy-friendly
-- Ability to make your dashboard public
-- Support for organizations
-- Cool visualizations
-- Advanced product analytics like session replays, goals, funnels, user retention, user journeys, and custom reports
-- Quick setup on any website within a few minutes
-
-## Comparison
-
-See how Rybbit compares to other analytics solutions:
-
-| Feature                  | Rybbit  | GA4        | Plausible  | Cloudflare |
-| ------------------------ | ------- | ---------- | ---------- | ---------- |
-| **Open Source**          | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Self-Hosting**         | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} />\* | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Cookieless & Privacy friendly** | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> |
-| **Advanced Maps**        | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Advanced Filters**     | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <span className="inline-flex items-center gap-1"><AlertTriangle className="w-5 h-5" color="orange" strokeWidth={3} /> Limited</span> | <span className="inline-flex items-center gap-1"><AlertTriangle className="w-5 h-5" color="orange" strokeWidth={3} /> Limited</span> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Web Vitals**           | <span className="inline-flex items-center gap-1"><AlertTriangle className="w-5 h-5" color="orange" strokeWidth={3} /> Paid</span> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Session Details**      | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **User Profiles**        | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Session Replays**      | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Funnels**              | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <span className="inline-flex items-center gap-1"><AlertTriangle className="w-5 h-5" color="orange" strokeWidth={3} /> Paid</span> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **User Journeys**        | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Retention Analysis**   | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Goals & Events**       | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Real-time Dashboard**  | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> |
-| **Custom Events (JSON)** | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <span className="inline-flex items-center gap-1"><AlertTriangle className="w-5 h-5" color="orange" strokeWidth={3} /> Limited</span> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Error Tracking**       | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Public Dashboards**    | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-| **Organizations**        | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> |
-| **Free Tier**            | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> |
-| **Frog 🐸**              | <Check className="w-5 h-5 inline" color="green" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> | <X className="w-5 h-5 inline" color="gray" strokeWidth={3} /> |
-
-\* Plausible's Community Edition has very limited features compared to their cloud version
+</div> */}
 
 ## Getting Started
 
 Choose the option that's right for you:
 
-- **Cloud Version:** Sign up for the hosted version at [rybbit.io/signup](https://app.rybbit.io/signup). Get up and running in minutes.
-- **Self-Host:** Follow our [Self-Hosting Guide](/docs/self-hosting) to set up Rybbit on your own server.
+- **Cloud Version:** Sign up for the [hosted version](https://app.rybbit.io/signup). Get up and running in minutes.
+- **Self-Host:** Follow our [self hosting guide](/docs/self-hosting) to set up Rybbit on your own server.
 
-And then learn how to add the [Tracking Script](/docs/script) to your website to start collecting data.
+And then learn how to add the [tracking script](/docs/script) to your website to start collecting data.
 
 ## Integration Guides
 
@@ -107,12 +67,6 @@ And then learn how to add the [Tracking Script](/docs/script) to your website to
     icon={<SiAstro />}
     title="Astro" 
     href="/docs/guides/astro" 
-    className="flex items-center gap-2"
-  />
-  <Card 
-    icon={<SiMintlify className="w-5 h-5" />}
-    title="Mintlify" 
-    href="/docs/guides/mintlify" 
     className="flex items-center gap-2"
   />
   <Card 
@@ -132,22 +86,28 @@ And then learn how to add the [Tracking Script](/docs/script) to your website to
     href="/docs/guides/drupal" 
     className="flex items-center gap-2"
   />
-  <Card 
+  <Card
     icon={<SiFramer />}
-    title="Framer" 
-    href="/docs/guides/framer" 
+    title="Framer"
+    href="/docs/guides/framer"
     className="flex items-center gap-2"
   />
-  <Card 
+  <Card
+    icon={<SiGatsby />}
+    title="Gatsby"
+    href="/docs/guides/react/gatsby"
+    className="flex items-center gap-2"
+  />
+  <Card
     icon={<SiGoogletagmanager />}
-    title="Google Tag Manager" 
-    href="/docs/guides/google-tag-manager" 
+    title="Google Tag Manager"
+    href="/docs/guides/google-tag-manager"
     className="flex items-center gap-2"
   />
-  <Card 
+  <Card
     icon={<SiHugo />}
-    title="Hugo" 
-    href="/docs/guides/hugo" 
+    title="Hugo"
+    href="/docs/guides/hugo"
     className="flex items-center gap-2"
   />
   <Card 
@@ -163,21 +123,27 @@ And then learn how to add the [Tracking Script](/docs/script) to your website to
     className="flex items-center gap-2"
   />
   <Card 
-    icon={<SiReact />}
-    title="React" 
-    href="/docs/guides/react/vite-cra" 
+    icon={<SiMintlify className="w-5 h-5" />}
+    title="Mintlify" 
+    href="/docs/guides/mintlify" 
     className="flex items-center gap-2"
   />
-  <Card 
+  <Card
     icon={<SiNextdotjs />}
-    title="Next.js" 
-    href="/docs/guides/react/next-js" 
+    title="Next.js"
+    href="/docs/guides/react/next-js"
     className="flex items-center gap-2"
   />
-  <Card 
-    icon={<SiGatsby />}
-    title="Gatsby" 
-    href="/docs/guides/react/gatsby" 
+  <Card
+    icon={<SiNuxt />}
+    title="Nuxt"
+    href="/docs/guides/vue/nuxt"
+    className="flex items-center gap-2"
+  />
+  <Card
+    icon={<SiReact />}
+    title="React"
+    href="/docs/guides/react/vite-cra"
     className="flex items-center gap-2"
   />
   <Card 
@@ -210,22 +176,16 @@ And then learn how to add the [Tracking Script](/docs/script) to your website to
     href="/docs/guides/svelte/sveltekit" 
     className="flex items-center gap-2"
   />
-  <Card 
+  <Card
     icon={<SiVuedotjs />}
-    title="Vue" 
-    href="/docs/guides/vue/vite" 
+    title="Vue"
+    href="/docs/guides/vue/vite"
     className="flex items-center gap-2"
   />
-  <Card 
-    icon={<SiNuxt />}
-    title="Nuxt" 
-    href="/docs/guides/vue/nuxt" 
-    className="flex items-center gap-2"
-  />
-  <Card 
+  <Card
     icon={<SiWebflow />}
-    title="Webflow" 
-    href="/docs/guides/webflow" 
+    title="Webflow"
+    href="/docs/guides/webflow"
     className="flex items-center gap-2"
   />
   <Card 

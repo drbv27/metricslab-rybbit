@@ -294,7 +294,7 @@ export default function HomePage() {
                   alt="DTelecom"
                   width={120}
                   height={40}
-                  className="opacity-40 hover:opacity-70 dark:opacity-60 dark:hover:opacity-100 transition-opacity grayscale invert dark:invert-0 dark:grayscale-0"
+                  className="opacity-40 hover:opacity-70 dark:opacity-60 dark:hover:opacity-100 transition-opacity grayscale invert dark:invert-0"
                 />
               </div>
 
@@ -305,7 +305,7 @@ export default function HomePage() {
                     alt="DPM.lol"
                     width={120}
                     height={40}
-                    className="opacity-40 hover:opacity-70 dark:opacity-60 dark:hover:opacity-100 transition-opacity grayscale invert dark:invert-0 dark:grayscale-0"
+                    className="opacity-40 hover:opacity-70 dark:opacity-60 dark:hover:opacity-100 transition-opacity grayscale invert dark:invert-0"
                   />
                 </Link>
               </div>

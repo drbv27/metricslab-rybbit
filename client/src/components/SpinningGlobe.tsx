@@ -5,9 +5,9 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { GetSessionsResponse } from "../../../api/analytics/useGetUserSessions";
-import { useConfigs } from "../../../lib/configs";
-import "../../[site]/globe/globe.css";
+import type { GetSessionsResponse } from "../api/analytics/useGetUserSessions";
+import { useConfigs } from "../lib/configs";
+import "../app/[site]/globe/globe.css";
 
 // Constants
 const SOURCE_ID = "demo-sessions";
@@ -26,7 +26,7 @@ import BoringAvatar from "boring-avatars";
 import { createElement } from "react";
 // @ts-ignore - React 19 has built-in types
 import { renderToStaticMarkup } from "react-dom/server";
-import { AVATAR_COLORS } from "../../../components/Avatar";
+import { AVATAR_COLORS } from "./Avatar";
 
 function generateAvatarSVG(userId: string, size: number): string {
   const avatarElement = createElement(BoringAvatar, {
@@ -112,13 +112,16 @@ type MarkerData = {
   element: HTMLDivElement;
 };
 
+// Spin configuration
+const SECONDS_PER_REVOLUTION = 120;
+const MAX_SPIN_ZOOM = 5;
+const SLOW_SPIN_ZOOM = 3;
+
 export function SpinningGlobe() {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
-  const animationRef = useRef<number | null>(null);
   const markersMapRef = useRef<Map<string, MarkerData>>(new Map());
   const isUserInteractingRef = useRef(false);
-  const resumeSpinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
 
@@ -127,14 +130,12 @@ export function SpinningGlobe() {
     queryKey: ["demo-sessions"],
     queryFn: async () => {
       const response = await fetch(
-        "https://demo.rybbit.com/api/sessions/1?past_minutes_start=1440&past_minutes_end=0&filters=[]&page=1&limit=1000"
+        "https://demo.rybbit.com/api/sessions/1?past_minutes_start=120&past_minutes_end=0&filters=[]&page=1&limit=100"
       );
       return response.json();
     },
     staleTime: Infinity,
   });
-
-  console.log("sessionsData", sessionsData);
 
   const sessions = sessionsData?.data || [];
 
@@ -256,53 +257,59 @@ export function SpinningGlobe() {
         map.getCanvas().style.cursor = "";
       });
 
-      // Pause spinning when user interacts
-      const handleInteractionStart = () => {
-        isUserInteractingRef.current = true;
-        if (resumeSpinTimeoutRef.current) {
-          clearTimeout(resumeSpinTimeoutRef.current);
-          resumeSpinTimeoutRef.current = null;
+      // Spin globe function using easeTo for smooth animation
+      const spinGlobe = () => {
+        if (!mapRef.current) return;
+        const zoom = mapRef.current.getZoom();
+        if (!isUserInteractingRef.current && zoom < MAX_SPIN_ZOOM) {
+          let distancePerSecond = 360 / SECONDS_PER_REVOLUTION;
+          if (zoom > SLOW_SPIN_ZOOM) {
+            // Slow spinning at higher zooms
+            const zoomDif = (MAX_SPIN_ZOOM - zoom) / (MAX_SPIN_ZOOM - SLOW_SPIN_ZOOM);
+            distancePerSecond *= zoomDif;
+          }
+          const center = mapRef.current.getCenter();
+          center.lng -= distancePerSecond;
+          // Smoothly animate the map over one second
+          mapRef.current.easeTo({ center, duration: 1000, easing: n => n });
         }
       };
 
-      const handleInteractionEnd = () => {
-        // Resume spinning after 2 seconds of no interaction
-        resumeSpinTimeoutRef.current = setTimeout(() => {
-          isUserInteractingRef.current = false;
-        }, 2000);
-      };
+      // Pause spinning on interaction
+      map.on("mousedown", () => {
+        isUserInteractingRef.current = true;
+      });
 
-      map.on("dragstart", handleInteractionStart);
-      map.on("dragend", handleInteractionEnd);
-      map.on("zoomstart", handleInteractionStart);
-      map.on("zoomend", handleInteractionEnd);
+      // Restart spinning after interaction ends
+      map.on("mouseup", () => {
+        isUserInteractingRef.current = false;
+        spinGlobe();
+      });
+      map.on("dragend", () => {
+        isUserInteractingRef.current = false;
+        spinGlobe();
+      });
+      map.on("pitchend", () => {
+        isUserInteractingRef.current = false;
+        spinGlobe();
+      });
+      map.on("rotateend", () => {
+        isUserInteractingRef.current = false;
+        spinGlobe();
+      });
+
+      // When animation completes, spin again (creates continuous rotation)
+      map.on("moveend", () => {
+        spinGlobe();
+      });
 
       setMapLoaded(true);
 
-      // Start spinning animation
-      // const spinGlobe = () => {
-      //   if (!mapRef.current) return;
-      //   // Only spin if user is not interacting
-      //   if (!isUserInteractingRef.current) {
-      //     const center = mapRef.current.getCenter();
-      //     center.lng += 0.01;
-      //     mapRef.current.setCenter(center);
-      //   }
-      //   animationRef.current = requestAnimationFrame(spinGlobe);
-      // };
-
-      // spinGlobe();
+      // Start spinning
+      spinGlobe();
     });
 
     return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      if (resumeSpinTimeoutRef.current) {
-        clearTimeout(resumeSpinTimeoutRef.current);
-        resumeSpinTimeoutRef.current = null;
-      }
       // Clear markers
       markersMapRef.current.forEach(({ marker }) => marker.remove());
       markersMapRef.current.clear();

@@ -22,7 +22,7 @@ import { useConfigs } from "../../lib/configs";
 import { IS_CLOUD } from "../../lib/const";
 import { userStore } from "../../lib/userStore";
 import { cn, isValidDomain, normalizeDomain } from "../../lib/utils";
-import { SpinningGlobe } from "./components/SpinningGlobe";
+import { SpinningGlobe } from "../../components/SpinningGlobe";
 
 // Animation variants for step transitions
 const contentVariants = {
@@ -195,6 +195,21 @@ export default function SignupPage() {
           <motion.div initial="hidden" animate="visible" variants={contentVariants}>
             <h2 className="text-2xl font-semibold mb-4">Signup</h2>
             <div className="space-y-4">
+              {IS_CLOUD && (
+                <SocialButtons
+                  onError={setError}
+                  callbackURL="/signup?step=2"
+                  mode="signup"
+                  showDivider={false}
+                />
+              )}
+
+              {IS_CLOUD && (
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="text-muted-foreground">Or continue with email</span>
+                </div>
+              )}
+
               <AuthInput
                 id="email"
                 label="Email"
@@ -235,15 +250,6 @@ export default function SignupPage() {
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </AuthButton>
-
-              {IS_CLOUD && (
-                <SocialButtons
-                  onError={setError}
-                  callbackURL="/signup?step=2"
-                  mode="signup"
-                  className="grid grid-cols-2 gap-2"
-                />
-              )}
 
               <div className="text-center text-sm">
                 Already have an account?{" "}
@@ -398,26 +404,42 @@ export default function SignupPage() {
           <h1 className="text-lg text-neutral-600 dark:text-neutral-300 mb-6">Get started with Rybbit</h1>
 
           {/* Horizontal step indicator */}
-          <div className="flex items-center w-full mb-6">
-            {[1, 2, 3].map((step, index) => (
+          <div className="flex items-center w-full mb-8">
+            {[
+              { step: 1, label: "Account" },
+              { step: 2, label: "Organization" },
+              { step: 3, label: "Website" },
+            ].map(({ step, label }, index) => (
               <React.Fragment key={step}>
-                <div
-                  className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold transition-all duration-300",
-                    currentStep === step
-                      ? "bg-emerald-600 text-primary-foreground"
-                      : currentStep > step
-                        ? "bg-emerald-600/20 text-emerald-400 border-2 border-emerald-600/40"
-                        : "bg-muted-foreground/20 text-muted-foreground border-2 border-muted-foreground/40"
-                  )}
-                >
-                  {currentStep > step ? <Check className="h-5 w-5" /> : step}
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all duration-300",
+                      currentStep === step
+                        ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30"
+                        : currentStep > step
+                          ? "bg-emerald-600 text-white"
+                          : "bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400"
+                    )}
+                  >
+                    {currentStep > step ? <Check className="h-4 w-4" /> : step}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-xs font-medium transition-colors duration-300",
+                      currentStep >= step
+                        ? "text-neutral-900 dark:text-neutral-100"
+                        : "text-neutral-400 dark:text-neutral-500"
+                    )}
+                  >
+                    {label}
+                  </span>
                 </div>
                 {index < 2 && (
                   <div
                     className={cn(
-                      "flex-1 h-0.5 transition-all duration-300",
-                      currentStep > step ? "bg-emerald-600" : "bg-muted-foreground/40"
+                      "flex-1 h-0.5 mx-3 mb-6 transition-all duration-300 rounded-full",
+                      currentStep > step ? "bg-emerald-600" : "bg-neutral-200 dark:bg-neutral-800"
                     )}
                   />
                 )}

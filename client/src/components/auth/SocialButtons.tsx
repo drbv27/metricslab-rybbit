@@ -4,15 +4,25 @@ import { Button } from "@/components/ui/button";
 import { SiGoogle, SiGithub } from "@icons-pack/react-simple-icons";
 import { authClient } from "@/lib/auth";
 import { IS_CLOUD } from "@/lib/const";
+import Image from "next/image";
 
 interface SocialButtonsProps {
   onError: (error: string) => void;
   callbackURL?: string;
   mode?: "signin" | "signup";
   className?: string;
+  showDivider?: boolean;
+  dividerText?: string;
 }
 
-export function SocialButtons({ onError, callbackURL, mode = "signin", className = "" }: SocialButtonsProps) {
+export function SocialButtons({
+  onError,
+  callbackURL,
+  mode = "signin",
+  className = "",
+  showDivider = true,
+  dividerText = "Or continue with",
+}: SocialButtonsProps) {
   if (!IS_CLOUD) return null;
 
   const handleSocialAuth = async (provider: "google" | "github" | "twitter") => {
@@ -30,18 +40,20 @@ export function SocialButtons({ onError, callbackURL, mode = "signin", className
 
   return (
     <>
-      <div className="relative flex justify-center text-xs uppercase">
-        <span className="text-muted-foreground">Or continue with</span>
-      </div>
+      {showDivider && (
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="text-muted-foreground">{dividerText}</span>
+        </div>
+      )}
 
       <div className={`flex flex-col gap-2 ${className}`}>
-        <Button type="button" onClick={() => handleSocialAuth("google")}>
-          <SiGoogle />
-          Google
+        <Button type="button" onClick={() => handleSocialAuth("google")} className="h-11">
+          <Image src="/crawlers/Google.svg" alt="Google" width={16} height={16} />
+          Continue with Google
         </Button>
-        <Button type="button" onClick={() => handleSocialAuth("github")}>
+        <Button type="button" onClick={() => handleSocialAuth("github")} className="h-11">
           <SiGithub />
-          GitHub
+          Continue with GitHub
         </Button>
       </div>
     </>

@@ -307,14 +307,14 @@ export function ImportManager({ siteId, disabled }: ImportManagerProps) {
                     <TableHead className="text-right">Imported</TableHead>
                     <TableHead className="text-right">Skipped</TableHead>
                     <TableHead className="text-right">Invalid</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedImports.map(imp => {
                     const statusInfo = getStatusInfo(imp.completedAt);
                     const StatusIcon = statusInfo.icon;
-                    const startedAt = DateTime.fromISO(imp.startedAt).toFormat("MMM dd, yyyy HH:mm");
+                    const startedAt = DateTime.fromSQL(imp.startedAt).toFormat("MMM dd, yyyy HH:mm");
 
                     return (
                       <TableRow key={imp.importId}>
@@ -365,7 +365,7 @@ export function ImportManager({ siteId, disabled }: ImportManagerProps) {
                             <span className="text-muted-foreground">0</span>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-center">
                           {imp.completedAt !== null && (
                             <Button
                               variant="outline"

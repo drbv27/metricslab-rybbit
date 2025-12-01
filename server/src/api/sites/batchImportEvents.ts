@@ -3,7 +3,8 @@ import { z } from "zod";
 import { getUserHasAdminAccessToSite } from "../../lib/auth-utils.js";
 import { clickhouse } from "../../db/clickhouse/clickhouse.js";
 import { updateImportProgress, completeImport, getImportById } from "../../services/import/importStatusManager.js";
-import { UmamiImportMapper } from "../../services/import/mappings/umami.js";
+import { UmamiEvent, UmamiImportMapper } from "../../services/import/mappings/umami.js";
+import { SimpleAnalyticsEvent, SimpleAnalyticsImportMapper } from "../../services/import/mappings/simpleAnalytics.js";
 import { importQuotaManager } from "../../services/import/importQuotaManager.js";
 import { db } from "../../db/postgres/postgres.js";
 import { sites } from "../../db/postgres/schema.js";
@@ -16,7 +17,10 @@ const batchImportRequestSchema = z
       importId: z.string().uuid(),
     }),
     body: z.object({
-      events: z.array(UmamiImportMapper.umamiEventKeyOnlySchema),
+      events: z.union([
+        z.array(UmamiImportMapper.umamiEventKeyOnlySchema),
+        z.array(SimpleAnalyticsImportMapper.simpleAnalyticsEventKeyOnlySchema),
+      ]),
       isLastBatch: z.boolean().optional(),
     }),
   })
@@ -68,7 +72,18 @@ export async function batchImportEvents(request: FastifyRequest<BatchImportReque
     try {
       const quotaTracker = await importQuotaManager.getTracker(siteRecord.organizationId);
 
-      const transformedEvents = UmamiImportMapper.transform(events, site, importId);
+      let transformedEvents;
+      if (importRecord.platform === "umami") {
+        transformedEvents = UmamiImportMapper.transform(events as UmamiEvent[], site, importId);
+      } else if (importRecord.platform === "simple_analytics") {
+        transformedEvents = SimpleAnalyticsImportMapper.transform(
+          events as SimpleAnalyticsEvent[],
+          site,
+          importId
+        );
+      } else {
+        return reply.status(400).send({ error: "Unsupported platform" });
+      }
       const invalidEventCount = events.length - transformedEvents.length;
 
       const timestamps = transformedEvents.map(e => e.timestamp);

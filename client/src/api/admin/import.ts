@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authedFetch } from "@/api/utils";
 import { APIResponse } from "@/api/types";
+import { ImportPlatform } from "@/types/import";
 
 interface GetSiteImportsResponse {
   importId: string;
-  platform: "umami";
+  platform: ImportPlatform;
   importedEvents: number;
   skippedEvents: number;
   invalidEvents: number;
@@ -37,7 +38,7 @@ export function useCreateSiteImport(site: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: { platform: "umami" }) => {
+    mutationFn: async (data: { platform: ImportPlatform }) => {
       return await authedFetch<APIResponse<CreateSiteImportResponse>>(`/create-site-import/${site}`, undefined, {
         method: "POST",
         data,

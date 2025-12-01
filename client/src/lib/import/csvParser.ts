@@ -1,6 +1,7 @@
 import Papa from "papaparse";
 import { DateTime } from "luxon";
 import { authedFetch } from "@/api/utils";
+import { ImportPlatform } from "@/types/import";
 
 interface UmamiEvent {
   session_id: string;
@@ -24,37 +25,52 @@ interface UmamiEvent {
   created_at: string;
 }
 
+interface SimpleAnalyticsEvent {
+  added_iso: string;
+  country_code: string;
+  datapoint: string;
+  document_referrer: string;
+  hostname: string;
+  lang_language: string;
+  lang_region: string;
+  path: string;
+  query: string;
+  screen_height: string;
+  screen_width: string;
+  session_id: string;
+  user_agent: string;
+  uuid: string;
+}
+
 export class CsvParser {
-  private cancelled = false;
-  private siteId: number = 0;
-  private importId: string = "";
-  private platform: "umami" = "umami";
+  private cancelled: boolean = false;
+  private readonly siteId: number;
+  private readonly importId: string;
+  private readonly platform: ImportPlatform;
+  private readonly earliestAllowedDate: DateTime;
+  private readonly latestAllowedDate: DateTime;
 
-  private earliestAllowedDate: DateTime | null = null;
-  private latestAllowedDate: DateTime | null = null;
-
-  startImport(
-    file: File,
+  constructor(
     siteId: number,
     importId: string,
-    platform: "umami",
+    platform: ImportPlatform,
     earliestAllowedDate: string,
     latestAllowedDate: string
-  ): void {
+  ) {
     this.siteId = siteId;
     this.importId = importId;
     this.platform = platform;
-
     this.earliestAllowedDate = DateTime.fromFormat(earliestAllowedDate, "yyyy-MM-dd", { zone: "utc" }).startOf("day");
     this.latestAllowedDate = DateTime.fromFormat(latestAllowedDate, "yyyy-MM-dd", { zone: "utc" }).endOf("day");
 
-    if (!this.earliestAllowedDate.isValid) {
+    // Pre-validate dates during instantiation
+    if (!this.earliestAllowedDate.isValid || !this.latestAllowedDate.isValid) {
       this.cancelled = true;
-      return;
     }
+  }
 
-    if (!this.latestAllowedDate.isValid) {
-      this.cancelled = true;
+  startImport(file: File): void {
+    if (this.cancelled) {
       return;
     }
 
@@ -70,16 +86,28 @@ export class CsvParser {
         }
 
         try {
-          const validEvents: UmamiEvent[] = [];
-          for (const row of results.data) {
-            const event = this.transformRow(row);
-            if (event && this.isDateInRange(event.created_at)) {
-              validEvents.push(event);
+          if (this.platform === "umami") {
+            const validEvents: UmamiEvent[] = [];
+            for (const row of results.data) {
+              const event = this.transformRow(row);
+              if (event && this.isDateInRange((event as UmamiEvent).created_at)) {
+                validEvents.push(event as UmamiEvent);
+              }
             }
-          }
-
-          if (validEvents.length > 0) {
-            await this.uploadChunk(validEvents, false);
+            if (validEvents.length > 0) {
+              await this.uploadChunk(validEvents, false);
+            }
+          } else {
+            const validEvents: SimpleAnalyticsEvent[] = [];
+            for (const row of results.data) {
+              const event = this.transformRow(row);
+              if (event && this.isDateInRange((event as SimpleAnalyticsEvent).added_iso)) {
+                validEvents.push(event as SimpleAnalyticsEvent);
+              }
+            }
+            if (validEvents.length > 0) {
+              await this.uploadChunk(validEvents, false);
+            }
           }
         } catch (error) {
           console.error("Error uploading chunk:", error);
@@ -105,55 +133,84 @@ export class CsvParser {
   }
 
   private isDateInRange(dateStr: string): boolean {
-    const createdAt = DateTime.fromFormat(dateStr, "yyyy-MM-dd HH:mm:ss", { zone: "utc" });
+    // Handle both formats: "yyyy-MM-dd HH:mm:ss" (Umami) and ISO (Simple Analytics)
+    let createdAt = DateTime.fromFormat(dateStr, "yyyy-MM-dd HH:mm:ss", { zone: "utc" });
+    if (!createdAt.isValid) {
+      createdAt = DateTime.fromISO(dateStr, { zone: "utc" });
+    }
     if (!createdAt.isValid) {
       return false;
     }
 
-    if (this.earliestAllowedDate && createdAt < this.earliestAllowedDate) {
+    if (createdAt < this.earliestAllowedDate) {
       return false;
     }
 
-    if (this.latestAllowedDate && createdAt > this.latestAllowedDate) {
+    if (createdAt > this.latestAllowedDate) {
       return false;
     }
 
     return true;
   }
 
-  private transformRow(row: unknown): UmamiEvent | null {
+  private transformRow(row: unknown): UmamiEvent | SimpleAnalyticsEvent | null {
     const rawEvent = row as Record<string, string>;
 
-    const umamiEvent: UmamiEvent = {
-      session_id: rawEvent.session_id,
-      hostname: rawEvent.hostname,
-      browser: rawEvent.browser,
-      os: rawEvent.os,
-      device: rawEvent.device,
-      screen: rawEvent.screen,
-      language: rawEvent.language,
-      country: rawEvent.country,
-      region: rawEvent.region,
-      city: rawEvent.city,
-      url_path: rawEvent.url_path,
-      url_query: rawEvent.url_query,
-      referrer_path: rawEvent.referrer_path,
-      referrer_domain: rawEvent.referrer_domain,
-      page_title: rawEvent.page_title,
-      event_type: rawEvent.event_type,
-      event_name: rawEvent.event_name,
-      distinct_id: rawEvent.distinct_id,
-      created_at: rawEvent.created_at,
-    };
+    if (this.platform === "umami") {
+      const umamiEvent: UmamiEvent = {
+        session_id: rawEvent.session_id,
+        hostname: rawEvent.hostname,
+        browser: rawEvent.browser,
+        os: rawEvent.os,
+        device: rawEvent.device,
+        screen: rawEvent.screen,
+        language: rawEvent.language,
+        country: rawEvent.country,
+        region: rawEvent.region,
+        city: rawEvent.city,
+        url_path: rawEvent.url_path,
+        url_query: rawEvent.url_query,
+        referrer_path: rawEvent.referrer_path,
+        referrer_domain: rawEvent.referrer_domain,
+        page_title: rawEvent.page_title,
+        event_type: rawEvent.event_type,
+        event_name: rawEvent.event_name,
+        distinct_id: rawEvent.distinct_id,
+        created_at: rawEvent.created_at,
+      };
 
-    if (!umamiEvent.created_at) {
-      return null;
+      if (!umamiEvent.created_at) {
+        return null;
+      }
+
+      return umamiEvent;
+    } else {
+      const simpleAnalyticsEvent: SimpleAnalyticsEvent = {
+        added_iso: rawEvent.added_iso,
+        country_code: rawEvent.country_code,
+        datapoint: rawEvent.datapoint,
+        document_referrer: rawEvent.document_referrer,
+        hostname: rawEvent.hostname,
+        lang_language: rawEvent.lang_language,
+        lang_region: rawEvent.lang_region,
+        path: rawEvent.path,
+        query: rawEvent.query,
+        screen_height: rawEvent.screen_height,
+        screen_width: rawEvent.screen_width,
+        session_id: rawEvent.session_id,
+        user_agent: rawEvent.user_agent,
+        uuid: rawEvent.uuid,
+      };
+
+      if (!simpleAnalyticsEvent.added_iso) {
+        return null;
+      }
+
+      return simpleAnalyticsEvent;
     }
-
-    return umamiEvent;
   }
 
-  private async uploadChunk(events: UmamiEvent[], isLastBatch: boolean): Promise<void> {
+  private async uploadChunk(events: UmamiEvent[] | SimpleAnalyticsEvent[], isLastBatch: boolean): Promise<void> {
     // Skip empty chunks unless it's the last one (needed for finalization)
     if (events.length === 0 && !isLastBatch) {
       return;

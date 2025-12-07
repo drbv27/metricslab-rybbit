@@ -8,6 +8,7 @@ import { OutboundLinksList } from "../../../events/components/OutboundLinksList"
 import { OutboundLinksDialog } from "./OutboundLinksDialog";
 import { useGetOutboundLinks } from "../../../../../api/analytics/hooks/events/useGetOutboundLinks";
 import { Expand } from "lucide-react";
+import { ScrollArea } from "../../../../../components/ui/scroll-area";
 
 type Tab = "events" | "outbound";
 
@@ -21,12 +22,14 @@ function Events_() {
           <CardLoader />
         </div>
       )}
-      <div className="relative max-h-[420px] overflow-y-auto">
+      <div className="relative pr-2">
         <div className="flex flex-row gap-2 justify-between pr-1 text-xs text-neutral-600 dark:text-neutral-400 mb-2">
           <div>Custom Events</div>
           <div>Count</div>
         </div>
-        <EventList events={eventNamesData || []} isLoading={isLoadingEventNames} />
+        <ScrollArea className="h-[394px]">
+          <EventList events={eventNamesData || []} isLoading={isLoadingEventNames} />
+        </ScrollArea>
       </div>
     </>
   );

@@ -1,0 +1,77 @@
+# ============================================
+# DOCKER COMPOSE FOR COOLIFY DEPLOYMENT
+# ============================================
+# Este archivo es de REFERENCIA para desplegar ClickHouse en Coolify
+# Los demás servicios (Client, Server, Postgres) se despliegan individualmente
+# ============================================
+
+version: '3.8'
+
+services:
+  # ============================================
+  # CLICKHOUSE DATABASE
+  # ============================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.4.2
+    container_name: rybbit-clickhouse
+    restart: unless-stopped
+
+    environment:
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB:-analytics}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-default}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+
+    volumes:
+      # Datos persistentes
+      - clickhouse-data:/var/lib/clickhouse
+
+      # Archivos de configuración (monta desde ./clickhouse-configs/)
+      - ./clickhouse-configs/network.xml:/etc/clickhouse-server/config.d/network.xml:ro
+      - ./clickhouse-configs/enable_json.xml:/etc/clickhouse-server/config.d/enable_json.xml:ro
+      - ./clickhouse-configs/logging_rules.xml:/etc/clickhouse-server/config.d/logging_rules.xml:ro
+      - ./clickhouse-configs/user_logging.xml:/etc/clickhouse-server/config.d/user_logging.xml:ro
+
+    ports:
+      # Puerto HTTP (8123) - NO expongas públicamente, solo interno
+      - "8123:8123"
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          # Limita uso de RAM (ajusta según tu VPS)
+          memory: 1536M
+        reservations:
+          memory: 1024M
+
+volumes:
+  clickhouse-data:
+    driver: local
+
+# ============================================
+# NOTAS PARA COOLIFY:
+# ============================================
+#
+# 1. En Coolify, crea un servicio "Docker Compose" con este archivo
+#
+# 2. Configura estas variables de entorno en Coolify:
+#    - CLICKHOUSE_PASSWORD: password seguro
+#    - CLICKHOUSE_DB: analytics (o el que prefieras)
+#    - CLICKHOUSE_USER: default
+#
+# 3. NO expongas el puerto 8123 públicamente (sin dominio)
+#    Solo debe ser accesible internamente por el Server
+#
+# 4. El hostname interno será: "clickhouse" o el nombre que le des al servicio
+#    Úsalo en el Server como: CLICKHOUSE_HOST=http://clickhouse:8123
+#
+# 5. Asegúrate de que todos los servicios estén en la misma red Docker
+#    (Coolify lo hace automáticamente por defecto)
+#
+# ============================================

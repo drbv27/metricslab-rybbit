@@ -36,8 +36,28 @@ function AppSidebarContent() {
       onMouseLeave={() => setIsExpanded(false)}
     >
       <div className="flex flex-col items-start gap-2">
-        <Link href="/" className="mb-3 mt-1 ml-0.5 flex items-center justify-center">
-          <Image src="/faviconV2.png" alt="MetricsLab" width={24} height={24} priority />
+        <Link href="/" className="mb-3 mt-1 flex items-center justify-center overflow-hidden">
+          <div className="relative transition-all duration-300 ease-in-out" style={{ width: isExpanded ? '140px' : '24px', height: '24px' }}>
+            {isExpanded ? (
+              <Image
+                src="/metricslab.png"
+                alt="MetricsLab"
+                width={140}
+                height={24}
+                priority
+                className="object-contain transition-opacity duration-300"
+              />
+            ) : (
+              <Image
+                src="/faviconV2.png"
+                alt="MetricsLab"
+                width={24}
+                height={24}
+                priority
+                className="transition-opacity duration-300"
+              />
+            )}
+          </div>
         </Link>
         <SidebarLink
           href="/"

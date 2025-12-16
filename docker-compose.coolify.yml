@@ -1,8 +1,8 @@
 # ============================================
-# DOCKER COMPOSE FOR COOLIFY DEPLOYMENT
+# DOCKER COMPOSE COMPLETO PARA COOLIFY
 # ============================================
-# Este archivo es de REFERENCIA para desplegar ClickHouse en Coolify
-# Los demás servicios (Client, Server, Postgres) se despliegan individualmente
+# Despliegue all-in-one con SSL automático via Traefik
+# Dominio: app.metricslab.io
 # ============================================
 
 version: '3.8'
@@ -22,18 +22,18 @@ services:
       - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
 
     volumes:
-      # Datos persistentes
+      # Volumen persistente - SE REUTILIZA EL EXISTENTE
       - clickhouse-data:/var/lib/clickhouse
 
-      # Archivos de configuración (monta desde ./clickhouse-configs/)
-      - ./clickhouse-configs/network.xml:/etc/clickhouse-server/config.d/network.xml:ro
-      - ./clickhouse-configs/enable_json.xml:/etc/clickhouse-server/config.d/enable_json.xml:ro
-      - ./clickhouse-configs/logging_rules.xml:/etc/clickhouse-server/config.d/logging_rules.xml:ro
-      - ./clickhouse-configs/user_logging.xml:/etc/clickhouse-server/config.d/user_logging.xml:ro
-
-    ports:
-      # Puerto HTTP (8123) - NO expongas públicamente, solo interno
-      - "8123:8123"
+    configs:
+      - source: clickhouse_network
+        target: /etc/clickhouse-server/config.d/network.xml
+      - source: clickhouse_json
+        target: /etc/clickhouse-server/config.d/enable_json.xml
+      - source: clickhouse_logging
+        target: /etc/clickhouse-server/config.d/logging_rules.xml
+      - source: clickhouse_user_logging
+        target: /etc/clickhouse-server/config.d/user_logging.xml
 
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
@@ -42,36 +42,244 @@ services:
       retries: 5
       start_period: 30s
 
+    networks:
+      - rybbit-internal
+
     deploy:
       resources:
         limits:
-          # Limita uso de RAM (ajusta según tu VPS)
-          memory: 1536M
+          memory: 2048M
         reservations:
           memory: 1024M
 
-volumes:
-  clickhouse-data:
-    driver: local
+  # ============================================
+  # POSTGRESQL DATABASE
+  # ============================================
+  postgres:
+    image: postgres:17.4
+    container_name: rybbit-postgres
+    restart: unless-stopped
+
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+    volumes:
+      # Volumen persistente - SE REUTILIZA EL EXISTENTE
+      - postgres-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - rybbit-internal
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ============================================
+  # BACKEND API (Server)
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: rybbit-backend
+    restart: unless-stopped
+
+    environment:
+      - NODE_ENV=production
+      - CLICKHOUSE_HOST=http://clickhouse:8123
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BASE_URL=${BASE_URL}
+      - DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
+      - DISABLE_TELEMETRY=${DISABLE_TELEMETRY:-true}
+      - MAPBOX_TOKEN=${MAPBOX_TOKEN:-}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3001/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+    networks:
+      - rybbit-internal
+
+    labels:
+      # ===== TRAEFIK LABELS PARA BACKEND =====
+      - "traefik.enable=true"
+
+      # Router HTTPS para /api/*
+      - "traefik.http.routers.rybbit-backend.rule=Host(`app.metricslab.io`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.rybbit-backend.entrypoints=https"
+      - "traefik.http.routers.rybbit-backend.tls=true"
+      - "traefik.http.routers.rybbit-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rybbit-backend.priority=100"
+      - "traefik.http.services.rybbit-backend.loadbalancer.server.port=3001"
+
+      # Router HTTP redirect a HTTPS
+      - "traefik.http.routers.rybbit-backend-http.rule=Host(`app.metricslab.io`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.rybbit-backend-http.entrypoints=http"
+      - "traefik.http.routers.rybbit-backend-http.middlewares=redirect-to-https@docker"
+      - "traefik.http.routers.rybbit-backend-http.priority=100"
+
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 512M
+
+  # ============================================
+  # FRONTEND (Client - Next.js)
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        NEXT_PUBLIC_BACKEND_URL: ${BASE_URL}
+        NEXT_PUBLIC_DISABLE_SIGNUP: ${NEXT_PUBLIC_DISABLE_SIGNUP:-false}
+        NEXT_PUBLIC_CLOUD: ${NEXT_PUBLIC_CLOUD:-false}
+    container_name: rybbit-frontend
+    restart: unless-stopped
+
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_BACKEND_URL=${BASE_URL}
+      - NEXT_PUBLIC_DISABLE_SIGNUP=${NEXT_PUBLIC_DISABLE_SIGNUP:-false}
+      - NEXT_PUBLIC_CLOUD=${NEXT_PUBLIC_CLOUD:-false}
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    networks:
+      - rybbit-internal
+
+    labels:
+      # ===== TRAEFIK LABELS PARA FRONTEND =====
+      - "traefik.enable=true"
+
+      # Router HTTPS para todo el tráfico (excepto /api/* que maneja el backend)
+      - "traefik.http.routers.rybbit-frontend.rule=Host(`app.metricslab.io`)"
+      - "traefik.http.routers.rybbit-frontend.entrypoints=https"
+      - "traefik.http.routers.rybbit-frontend.tls=true"
+      - "traefik.http.routers.rybbit-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.rybbit-frontend.priority=10"
+      - "traefik.http.services.rybbit-frontend.loadbalancer.server.port=3002"
+
+      # Router HTTP redirect a HTTPS
+      - "traefik.http.routers.rybbit-frontend-http.rule=Host(`app.metricslab.io`)"
+      - "traefik.http.routers.rybbit-frontend-http.entrypoints=http"
+      - "traefik.http.routers.rybbit-frontend-http.middlewares=redirect-to-https@docker"
+      - "traefik.http.routers.rybbit-frontend-http.priority=10"
+
+      # Middleware para redirect HTTP -> HTTPS
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
 # ============================================
-# NOTAS PARA COOLIFY:
+# NETWORKS
 # ============================================
-#
-# 1. En Coolify, crea un servicio "Docker Compose" con este archivo
-#
-# 2. Configura estas variables de entorno en Coolify:
-#    - CLICKHOUSE_PASSWORD: password seguro
-#    - CLICKHOUSE_DB: analytics (o el que prefieras)
-#    - CLICKHOUSE_USER: default
-#
-# 3. NO expongas el puerto 8123 públicamente (sin dominio)
-#    Solo debe ser accesible internamente por el Server
-#
-# 4. El hostname interno será: "clickhouse" o el nombre que le des al servicio
-#    Úsalo en el Server como: CLICKHOUSE_HOST=http://clickhouse:8123
-#
-# 5. Asegúrate de que todos los servicios estén en la misma red Docker
-#    (Coolify lo hace automáticamente por defecto)
-#
+networks:
+  rybbit-internal:
+    name: rybbit-internal
+    driver: bridge
+
 # ============================================
+# VOLUMES (VOLÚMENES EXISTENTES)
+# ============================================
+volumes:
+  clickhouse-data:
+    external: true
+    # IMPORTANTE: Cambia esto por el nombre EXACTO de tu volumen existente en Coolify
+    # Para encontrarlo: docker volume ls | grep clickhouse
+    name: ${CLICKHOUSE_VOLUME_NAME:-clickhouse-data}
+
+  postgres-data:
+    external: true
+    # IMPORTANTE: Cambia esto por el nombre EXACTO de tu volumen existente en Coolify
+    # Para encontrarlo: docker volume ls | grep postgres
+    name: ${POSTGRES_VOLUME_NAME:-postgres-data}
+
+# ============================================
+# CONFIGS (ClickHouse XML configs)
+# ============================================
+configs:
+  clickhouse_network:
+    content: |
+      <clickhouse>
+          <listen_host>0.0.0.0</listen_host>
+      </clickhouse>
+
+  clickhouse_json:
+    content: |
+      <clickhouse>
+          <settings>
+              <enable_json_type>1</enable_json_type>
+          </settings>
+      </clickhouse>
+
+  clickhouse_logging:
+    content: |
+      <clickhouse>
+        <logger>
+            <level>warning</level>
+            <console>true</console>
+        </logger>
+        <query_thread_log remove="remove"/>
+        <query_log remove="remove"/>
+        <text_log remove="remove"/>
+        <trace_log remove="remove"/>
+        <metric_log remove="remove"/>
+        <asynchronous_metric_log remove="remove"/>
+        <session_log remove="remove"/>
+        <part_log remove="remove"/>
+        <latency_log remove="remove"/>
+        <processors_profile_log remove="remove"/>
+      </clickhouse>
+
+  clickhouse_user_logging:
+    content: |
+      <clickhouse>
+        <profiles>
+          <default>
+            <log_queries>0</log_queries>
+            <log_query_threads>0</log_query_threads>
+            <log_processors_profiles>0</log_processors_profiles>
+          </default>
+        </profiles>
+      </clickhouse>

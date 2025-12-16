@@ -1,11 +1,12 @@
 "use client";
 
-import { BarChart, ShieldUser, User } from "lucide-react";
+import { BarChart, LogOut, ShieldUser, User } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useEmbedablePage } from "../app/[site]/utils";
 import { useAdminPermission } from "../app/admin/hooks/useAdminPermission";
+import { authClient } from "../lib/auth";
 import { IS_CLOUD } from "../lib/const";
 import { cn } from "../lib/utils";
 import { RybbitLogo } from "./RybbitLogo";
@@ -13,9 +14,15 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 
 function AppSidebarContent() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isAdmin } = useAdminPermission();
   const [isExpanded, setIsExpanded] = useState(false);
   const embed = useEmbedablePage();
+
+  const handleLogout = async () => {
+    await authClient.signOut();
+    router.push("/login");
+  };
 
   if (embed) return null;
 
@@ -67,6 +74,12 @@ function AppSidebarContent() {
           active={pathname.startsWith("/settings/account")}
           expanded={isExpanded}
         />
+        <SidebarButton
+          onClick={handleLogout}
+          icon={<LogOut className="w-5 h-5" />}
+          label="Logout"
+          expanded={isExpanded}
+        />
       </div>
     </div>
   );
@@ -110,5 +123,33 @@ function SidebarLink({
         )}
       </div>
     </Link>
+  );
+}
+
+function SidebarButton({
+  onClick,
+  icon,
+  label,
+  expanded = false,
+}: {
+  onClick: () => void;
+  icon?: React.ReactNode;
+  label?: string;
+  expanded?: boolean;
+}) {
+  return (
+    <button onClick={onClick} className="focus:outline-none">
+      <div
+        className={cn(
+          "p-1 rounded-md transition-all duration-200 flex items-center gap-2",
+          "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-150 dark:hover:bg-neutral-800/80"
+        )}
+      >
+        <div className="flex items-center justify-center w-5 h-5 shrink-0">{icon}</div>
+        {expanded && label && (
+          <span className="text-sm font-medium whitespace-nowrap overflow-hidden w-[120px]">{label}</span>
+        )}
+      </div>
+    </button>
   );
 }

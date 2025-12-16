@@ -33,7 +33,7 @@ const contentVariants = {
 
 function SignupPageContent() {
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
-  useSetPageTitle("Rybbit · Signup");
+  useSetPageTitle("MetricsLab · Registro");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [stepParam] = useQueryState("step", parseAsInteger);

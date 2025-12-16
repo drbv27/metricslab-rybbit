@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart, LogOut, ShieldUser, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -9,7 +10,6 @@ import { useAdminPermission } from "../app/admin/hooks/useAdminPermission";
 import { authClient } from "../lib/auth";
 import { IS_CLOUD } from "../lib/const";
 import { cn } from "../lib/utils";
-import { RybbitLogo } from "./RybbitLogo";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
 function AppSidebarContent() {
@@ -37,7 +37,7 @@ function AppSidebarContent() {
     >
       <div className="flex flex-col items-start gap-2">
         <Link href="/" className="mb-3 mt-1 ml-0.5 flex items-center justify-center">
-          <RybbitLogo width={24} height={18} />
+          <Image src="/faviconV2.png" alt="MetricsLab" width={24} height={24} priority />
         </Link>
         <SidebarLink
           href="/"

@@ -33,7 +33,7 @@ const contentVariants = {
 
 function SignupPageContent() {
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
-  useSetPageTitle("MetricsLab · Registro");
+  useSetPageTitle("MetricsLab · Signup");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [stepParam] = useQueryState("step", parseAsInteger);

@@ -5,10 +5,10 @@ import { AuthError } from "@/components/auth/AuthError";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { SocialButtons } from "@/components/auth/SocialButtons";
 import { Turnstile } from "@/components/auth/Turnstile";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SpinningGlobe } from "../../components/SpinningGlobe";
 import { useSetPageTitle } from "../../hooks/useSetPageTitle";
 import { authClient } from "../../lib/auth";
 import { useConfigs } from "../../lib/configs";
@@ -17,7 +17,7 @@ import { userStore } from "../../lib/userStore";
 
 export default function Page() {
   const { configs, isLoading: isLoadingConfigs } = useConfigs();
-  useSetPageTitle("MetricsLab · Iniciar Sesión");
+  useSetPageTitle("MetricsLab · Login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,19 +71,17 @@ export default function Page() {
   const turnstileEnabled = IS_CLOUD && process.env.NODE_ENV === "production";
 
   return (
-    <div className="flex h-dvh w-full">
-      {/* Left panel - login form */}
-      <div className="w-full lg:w-[550px] flex flex-col p-6 lg:p-10">
-        {/* Logo at top left */}
-        <div className="mb-8">
+    <div className="flex h-dvh w-full items-center justify-center">
+      {/* Centered login form */}
+      <div className="w-full max-w-md flex flex-col p-6">
+        {/* Logo centered */}
+        <div className="mb-8 flex justify-center">
           <a href="https://metricslab.io" target="_blank" className="inline-block">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-              MetricsLab
-            </h1>
+            <Image src="/metricslab.png" alt="MetricsLab" width={300} height={80} priority />
           </a>
         </div>
-        <div className="flex-1 flex flex-col justify-center w-full max-w-[550px] mx-auto">
-          <h1 className="text-lg text-neutral-600 dark:text-neutral-300 mb-6">Bienvenido a MetricsLab Analytics</h1>
+        <div className="flex flex-col w-full">
+          <h1 className="text-lg text-neutral-600 dark:text-neutral-300 mb-6 text-center">Welcome to MetricsLab Analytics</h1>
           <div className="flex flex-col gap-4">
             <SocialButtons onError={setError} />
             <form onSubmit={handleSubmit}>
@@ -126,6 +124,8 @@ export default function Page() {
                   isLoading={isLoading}
                   loadingText="Logging in..."
                   disabled={turnstileEnabled ? !turnstileToken || isLoading : isLoading}
+                  variant="default"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Login
                 </AuthButton>
@@ -149,22 +149,17 @@ export default function Page() {
         </div>
 
         {!IS_CLOUD && (
-          <div className="text-xs text-muted-foreground mt-8">
+          <div className="text-xs text-muted-foreground mt-8 text-center">
             <a
               href="https://metricslab.io"
               target="_blank"
               rel="noopener"
               title="MetricsLab - Analytics Platform"
             >
-              © 2024 MetricsLab Analytics. Todos los derechos reservados.
+              © 2025 MetricsLab Analytics. All rights reserved.
             </a>
           </div>
         )}
-      </div>
-
-      {/* Right panel - globe (hidden on mobile/tablet) */}
-      <div className="hidden lg:block lg:w-[calc(100%-550px)] relative m-3 rounded-2xl overflow-hidden">
-        <SpinningGlobe />
       </div>
     </div>
   );

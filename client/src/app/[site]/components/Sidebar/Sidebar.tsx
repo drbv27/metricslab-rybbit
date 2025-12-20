@@ -83,38 +83,32 @@ function SidebarContent() {
           href={getTabPath("globe")}
           icon={<Globe2 className="w-4 h-4" />}
         />
-        {IS_CLOUD && (
-          <SidebarComponents.Item
-            label="Pages"
-            active={isActiveTab("pages")}
-            href={getTabPath("pages")}
-            icon={<File className="w-4 h-4" />}
-          />
-        )}
-        {IS_CLOUD && (
-          <SidebarComponents.Item
-            label="Performance"
-            active={isActiveTab("performance")}
-            href={getTabPath("performance")}
-            icon={<Gauge className="w-4 h-4" />}
-          />
-        )}
+        <SidebarComponents.Item
+          label="Pages"
+          active={isActiveTab("pages")}
+          href={getTabPath("pages")}
+          icon={<File className="w-4 h-4" />}
+        />
+        <SidebarComponents.Item
+          label="Performance"
+          active={isActiveTab("performance")}
+          href={getTabPath("performance")}
+          icon={<Gauge className="w-4 h-4" />}
+        />
         <SidebarComponents.Item
           label="Goals"
           active={isActiveTab("goals")}
           href={getTabPath("goals")}
           icon={<Target className="w-4 h-4" />}
         />
-        {IS_CLOUD && (
-          <div className="hidden md:block">
-            <SidebarComponents.Item
-              label="API Playground"
-              active={isActiveTab("api-playground")}
-              href={getTabPath("api-playground")}
-              icon={<Code className="w-4 h-4" />}
-            />
-          </div>
-        )}
+        <div className="hidden md:block">
+          <SidebarComponents.Item
+            label="API Playground"
+            active={isActiveTab("api-playground")}
+            href={getTabPath("api-playground")}
+            icon={<Code className="w-4 h-4" />}
+          />
+        </div>
         <SidebarComponents.SectionHeader>Product Analytics</SidebarComponents.SectionHeader>
         <div className="hidden md:block">
           {!subscription?.planName?.startsWith("appsumo") && !isSubscriptionLoading && (
